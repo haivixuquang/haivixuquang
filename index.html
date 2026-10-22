@@ -171,6 +171,7 @@ input.bad,textarea.bad{border-color:var(--chili)}
     <div style="height:14px"></div>
     <p class="note">Miễn phí giao hàng trong Đà Nẵng. Nhận đơn từ 7h đến 22h30.</p>
     <button class="btn" id="send" disabled>Đặt hàng</button>
+    <p class="msg" id="last" hidden></p>
   </div>
 
   <h2>Vì sao chọn nhà mình</h2>
@@ -181,14 +182,16 @@ input.bad,textarea.bad{border-color:var(--chili)}
   </div>
 </main>
 
-<div id="ok" hidden role="dialog" aria-modal="true" aria-label="Đơn hàng sẵn sàng"><div class="okc">
+<div id="ok" hidden role="dialog" aria-modal="true" aria-label="Đặt hàng thành công"><div class="okc">
 <button id="okx" aria-label="Đóng">×</button>
 <div class="tick">✓</div>
-<h3>Đơn của bạn đã sẵn sàng!</h3>
+<h3>Đặt hàng thành công!</h3>
 <div class="code">Mã đơn <b id="okcode"></b></div>
-<div class="oksum"><small>Tóm tắt đơn</small><div id="oktxt"></div></div>
-<div class="okstep">Hải Vị sẽ gọi xác nhận đơn qua số điện thoại bạn đã nhập (nhận đơn 7h – 22h30).</div>
-<button class="btn alt" id="okdone">Xong</button>
+<div class="oksum"><small>Đơn của bạn</small><div id="oktxt"></div></div>
+<div class="okstep"><b>Bạn chụp màn hình đơn này</b> rồi gửi cho fanpage Hải Vị Xứ Quảng qua Messenger nhenn. Khi giao hàng tụi mình sẽ liên lạc với bạn dễ dàng hơn nè. 🧡</div>
+<a class="btn" id="okmsg" target="_blank" rel="noopener">Gửi đơn qua Messenger</a>
+<div class="oknote" id="oknote"></div>
+<button class="ghost" id="okdone">Xong</button>
 </div></div>
 <button id="cb" aria-label="Hỏi trợ lý"><span class="av"></span>Hỏi Hải Vị</button>
 <div id="cp" hidden role="dialog" aria-label="Trợ lý Hải Vị"><div class="ch"><span class="av"></span><div><b>Hải Vị</b><small>Trợ lý của tiệm · trả lời ngay</small></div><button id="cx" aria-label="Đóng">×</button></div><div id="cm"></div><div id="cc"></div><div class="cf"><input id="ci" placeholder="Hỏi giá, ship, cách đặt..." autocomplete="off"><button id="cs">Gửi</button></div></div>
@@ -295,16 +298,40 @@ function sendToSheet(code){
     pay: document.getElementById("pay").value, note: document.getElementById("note").value.trim() };
   try{ fetch(SHEET_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(d), keepalive: true }); }catch(e){}
 }
+var okText = "";
 function showOk(code, t){
+  okText = t;
   document.getElementById("okcode").textContent = code;
   document.getElementById("oktxt").textContent = t.split("\n").slice(2).join("\n");
+  document.getElementById("okmsg").href = "https://m.me/" + FB_PAGE;
+  document.getElementById("oknote").textContent = "";
   document.getElementById("ok").hidden = false; document.body.style.overflow = "hidden";
 }
+// Nhớ đơn vừa đặt trên máy khách, để khách tải lại trang vẫn thấy đơn đã gửi (không bấm đặt lại).
+var LAST_KEY = "hv_last", LAST_DAYS = 3;
+function remember(code, t){ try{ localStorage.setItem(LAST_KEY, JSON.stringify({code: code, t: t, at: Date.now()})); }catch(e){} }
+function showLast(){
+  var o = null; try{ o = JSON.parse(localStorage.getItem(LAST_KEY)); }catch(e){}
+  var el = document.getElementById("last");
+  if(!o || Date.now() - o.at > LAST_DAYS*864e5){ el.hidden = true; return; }
+  el.innerHTML = '✅ Bạn đã đặt đơn <b></b>. <a href="#" id="relook">Xem lại đơn</a>';
+  el.querySelector("b").textContent = o.code;
+  document.getElementById("relook").onclick = function(e){ e.preventDefault(); showOk(o.code, o.t); };
+  el.hidden = false;
+}
+document.getElementById("okmsg").addEventListener("click", function(){
+  try{ navigator.clipboard.writeText(okText); document.getElementById("oknote").textContent = "Đã sao chép đơn. Mở Messenger rồi dán vào tin nhắn gửi Hải Vị nhé."; }catch(e){}
+});
 function closeOk(){ document.getElementById("ok").hidden = true; document.body.style.overflow = ""; }
 document.getElementById("send").addEventListener("click", function(){
   if(!validate()) return;
-  var code = newCode(); sendToSheet(code); showOk(code, orderText(code));
+  this.disabled = true;
+  var code = newCode(), t = orderText(code);
+  sendToSheet(code); showOk(code, t); remember(code, t);
+  // Xóa giỏ sau khi gửi: nút "Đặt hàng" tự khóa lại, khách không gửi trùng được.
+  cart = {}; document.getElementById("note").value = ""; render(); summary(); showLast();
 });
+showLast();
 document.getElementById("okx").addEventListener("click", closeOk);
 document.getElementById("okdone").addEventListener("click", closeOk);
 document.getElementById("ok").addEventListener("click", function(e){ if(e.target === this) closeOk(); });
@@ -339,7 +366,7 @@ var FAQ = [
  {k:['muc kho','a2','a3','a4','size','khac nhau','loai nao','co nao'], a:'Mực khô chia theo cỡ, số con trong 1 kg càng ít thì con càng to: A2 khoảng 25–30 con/kg, A3 khoảng 40–45 con/kg, A4 khoảng 60–70 con/kg. Con càng to thì giá càng cao. Mỗi bịch nặng 0,5 kg.'},
  {k:['ship','giao hang','van chuyen','phi giao','mien phi','freeship','phi van'], a:'Nhà mình miễn phí ship cho mọi đơn giao trong Đà Nẵng. Nếu bạn ở ngoài Đà Nẵng, hãy nhắn fanpage ' + FBL + ' hoặc gửi email ' + MAIL + ' để mình tư vấn cách giao nhé.'},
  {w:2, k:['tinh khac',' tinh ','di xa','ha noi','sai gon','hcm','gui di'], a:'Hiện nhà mình giao miễn phí trong Đà Nẵng. Nếu bạn ở tỉnh khác, hãy nhắn fanpage ' + FBL + ' hoặc gửi email ' + MAIL + ' để mình tư vấn cách giao nhé.'},
- {k:['dat hang','cach dat','dat nhu the nao','order','muon mua','mua nhu the nao','dat mon'], a:'Cách đặt rất đơn giản:<br>1. Chọn món bằng nút + ở phần “Chọn món”.<br>2. Điền họ tên, số điện thoại, địa chỉ ở phần “Đơn của bạn”.<br>3. Bấm “Đặt hàng”, rồi gửi đơn cho Hải Vị qua Messenger hoặc email. Đơn được tính khi Hải Vị nhắn lại xác nhận.'},
+ {k:['dat hang','cach dat','dat nhu the nao','order','muon mua','mua nhu the nao','dat mon'], a:'Cách đặt rất đơn giản:<br>1. Chọn món bằng nút + ở phần “Chọn món”.<br>2. Điền họ tên, số điện thoại, địa chỉ ở phần “Đơn của bạn”.<br>3. Bấm “Đặt hàng” một lần. Màn hình sẽ hiện mã đơn, bạn chụp màn hình gửi fanpage qua Messenger. Hải Vị sẽ gọi xác nhận đơn.'},
  {k:['thanh toan','chuyen khoan','cod','tra tien','tien mat','ck '], a:'Bạn có thể chọn thu tiền khi nhận hàng (COD) hoặc chuyển khoản, chọn ngay trong phần “Đơn của bạn”.'},
  {k:['o dau','dia chi','dia diem','cua hang','tam xuan','tam tien','da nang','tiem o'], a:'Tiệm ở Tam Xuân (Tam Tiến cũ), Đà Nẵng.'},
  {k:['lien he','email','mail','so dien thoai','sdt','zalo','facebook','fanpage','hotline'], a:'Bạn liên hệ cửa hàng qua fanpage ' + FBL + ' hoặc email ' + MAIL},
