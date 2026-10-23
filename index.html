@@ -377,6 +377,8 @@ document.getElementById("cta").addEventListener("click",function(){ go("menu"); 
 var CHIPS = ['Giá các món?','Phí ship thế nào?','Cách đặt hàng?','Khi nào có mực khô?','Thanh toán thế nào?','Bảo quản ra sao?','Đặt trước mấy ngày?','Nhận đơn mấy giờ?'];
 var FBL = '<a href="https://web.facebook.com/profile.php?id=61595248601578&sk=about" target="_blank" rel="noopener">Hải Vị Xứ Quảng</a>';
 var MAIL = '<a href="mailto:haivixuquang@gmail.com">haivixuquang@gmail.com</a>';
+// Câu chào giống tin chào trên Messenger fanpage.
+var GREET = 'Chào bạn nhenn. 🧡<br>Nhà mình đang có mực rim với cá đét rim, bạn muốn thử món nào á?';
 // Bot giới thiệu trước các món có giá (mực rim, cá đét rim); món báo giá và món chưa có hàng thì nhắc một câu.
 // Chatbot chỉ nói giá hiện tại, không nhắc giảm giá (giá gạch ngang chỉ hiện trên thẻ món).
 function priceTxt(p){ return fmt(p.price) + ' một ' + p.unit; }
@@ -386,7 +388,7 @@ function menuAns(){
     '<br>Tụi mình lấy mẻ mới theo đơn nên vị vẫn đậm đà, thơm ngon á. Mực khô với cá khô thì gần Tết nhà mình mới có hàng nhenn.<br>Bạn chọn món ở phần “Chọn món” phía trên nha.';
 }
 var FAQ = [
- {k:['xin chao',' chao ','hello',' hi ','alo'], a:'Chào bạn nhenn 🧡 Nhà mình đang có mực rim với cá đét rim, bạn muốn thử món nào á?'},
+ {k:['xin chao',' chao ','hello',' hi ','alo'], a:GREET},
  {k:['gia ','bao nhieu','menu',' mon ','ban gi','san pham','co gi'], a:menuAns},
  {k:['muc kho','a2','a3','a4','size','khac nhau','loai nao','co nao'], a:'Dạ mực khô thì tầm tháng 1, gần Tết nhà mình mới có hàng á, có hàng là tụi mình báo giá liền nhenn.<br>Mực khô chia theo cỡ, số con trong 1 kg càng ít thì con càng to:<br>• A2: khoảng 25–30 con/kg<br>• A3: khoảng 40–45 con/kg<br>• A4: khoảng 60–70 con/kg<br>Mỗi bịch nặng <b>0,5 kg</b>.'},
  {w:2, k:['ca kho'], a:'Dạ cá khô thì tầm tháng 1, gần Tết nhà mình mới có hàng á, có hàng là tụi mình báo giá liền nhenn. Cá khô nướng hoặc chiên giòn ăn với cơm là hết sẩy luôn.'},
@@ -421,7 +423,7 @@ document.querySelectorAll('.av').forEach(function(a){ a.innerHTML = '<img src="'
 document.getElementById('cc').innerHTML = CHIPS.map(function(c){ return '<button>' + c + '</button>'; }).join('');
 function openChat(){
   cp.hidden = false; cb.hidden = true;
-  if(!greeted){ greeted = true; addMsg('b', 'Chào bạn nhenn 🧡 Nhà mình đang có mực rim với cá đét rim, bạn muốn thử món nào á?'); }
+  if(!greeted){ greeted = true; addMsg('b', GREET); }
 }
 function closeChat(){ cp.hidden = true; cb.hidden = false; }
 cb.addEventListener('click', openChat);
