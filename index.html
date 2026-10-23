@@ -37,6 +37,12 @@ header h1 em{color:var(--chili)}
 .badge{display:inline-block;color:var(--chili);font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
 h2{font-family:"Playfair Display",Georgia,serif;font-size:28px;margin:34px 0 6px}
 .sub{color:var(--mute);margin:0 0 16px}
+.mhead{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:34px 0 6px}
+.mhead h2{margin:0}
+.tabs{display:flex;gap:8px}
+.tabs button{background:var(--card);color:var(--sea);border:1px solid var(--sea);border-radius:40px;padding:9px 18px;font:700 16px "Be Vietnam Pro",sans-serif;cursor:pointer}
+.tabs button.on{background:var(--sea);color:var(--on)}
+@media(max-width:420px){.tabs{gap:6px}.tabs button{padding:8px 13px;font-size:15px}}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
 .pic{background:var(--sea2);display:flex;justify-content:center;padding:14px}
@@ -46,9 +52,11 @@ h2{font-family:"Playfair Display",Georgia,serif;font-size:28px;margin:34px 0 6px
 .body p{margin:0;color:var(--mute);font-size:14px;flex:1}
 .price{color:var(--chili);font-weight:700;font-size:18px}
 .price small{color:var(--mute);font-weight:400;font-size:13px}
+.price s{color:var(--mute);font-weight:400;font-size:14px;margin-right:8px}
 .qty{display:flex;align-items:center;gap:10px}
 .qty button{width:38px;height:38px;border-radius:50%;border:1px solid var(--sea);background:transparent;color:var(--sea);font-size:20px;cursor:pointer}
 .qty b{min-width:24px;text-align:center;font-size:18px}
+.soon{align-self:flex-start;background:var(--card);color:var(--sea);border:1px solid var(--sea);border-radius:20px;padding:8px 14px;font-size:14px;font-weight:600}
 .btn{background:var(--chili);color:var(--on);border:0;border-radius:14px;padding:18px 20px;font:700 19px "Be Vietnam Pro",sans-serif;cursor:pointer;width:100%}
 html{scroll-behavior:smooth}
 body{padding-bottom:72px}
@@ -155,7 +163,7 @@ input.bad,textarea.bad{border-color:var(--chili)}
 </header>
 
 <main class="wrap">
-  <h2 id="menu">Chọn món</h2>
+  <div class="mhead"><h2 id="menu">Chọn món</h2><div class="tabs" id="tabs" role="tablist"><button data-cat="all" class="on" role="tab" aria-selected="true">Tất cả</button><button data-cat="muc" role="tab" aria-selected="false">Mực</button><button data-cat="ca" role="tab" aria-selected="false">Cá</button></div></div>
   <p class="sub">Đặt trước để nhà mình lấy hàng mới, tươi ngon cho bạn. Bấm + để thêm vào đơn.</p>
   <div class="grid" id="list"></div>
 
@@ -209,13 +217,16 @@ var IMG_A3 = ["images/muc-kho-a3-1.jpg", "images/muc-kho-a3-2.jpg"];
 // Mã trang Facebook để mở Messenger khi gửi đơn.
 var FB_PAGE = "61595248601578";
 // price: số tiền (đồng). Để null nếu chưa chốt giá → hiện "Liên hệ báo giá".
+// old: giá cũ, hiện gạch ngang trước giá mới. Hết giảm giá thì xóa old đi.
+// soon: món chưa có hàng → hiện dòng chữ này, khóa nút đặt. Có hàng thì xóa soon đi.
+// cat: "muc" hoặc "ca" → món hiện ở nút Mực hay nút Cá (nút Tất cả hiện mọi món). Thêm loại cá khô mới thì để cat:"ca".
 var PRODUCTS = [
-  {id:"mr", name:"Mực rim", unit:"hủ", price:65000, desc:"Mực rim mặn ngọt, cay nhẹ, đậm đà. Ăn với cơm nóng hoặc nhắm cùng bạn bè.", art:"jar", imgs:IMG_MR},
-  {id:"cr", name:"Cá đét rim", unit:"hủ", price:60000, desc:"Cá đét rim mặn ngọt, đậm đà. Ăn với cơm nóng rất hao cơm.", art:"jar", imgs:IMG_CR},
-  {id:"mk2", name:"Mực khô loại A2", unit:"bịch", price:null, desc:"Con to nhất, thịt dày, ngọt tự nhiên. Nướng xé nhỏ chấm tương ớt.", art:"squid", imgs:IMG_A2, note:"25–30 con/kg · 0,5kg/bịch"},
-  {id:"mk3", name:"Mực khô loại A3", unit:"bịch", price:null, desc:"Cỡ vừa, thịt chắc, giá dễ chịu cho bữa nhậu và biếu người thân.", art:"squid", imgs:IMG_A3, note:"40–45 con/kg · 0,5kg/bịch"},
-  {id:"mk4", name:"Mực khô loại A4", unit:"bịch", price:null, desc:"Con nhỏ gọn, vị đậm, hợp ăn vặt và nấu món.", art:"squid", imgs:IMG_A4, note:"60–70 con/kg · 0,5kg/bịch"},
-  {id:"ck", name:"Cá khô", unit:"bịch", price:null, desc:"Cá khô đậm vị biển. Nướng hoặc chiên giòn ăn với cơm.", art:"fish", imgs:IMG_CK}
+  {id:"mr", cat:"muc", name:"Mực rim", unit:"hủ", price:65000, old:70000, desc:"Mực rim mặn ngọt, cay nhẹ, đậm đà. Ăn với cơm nóng hoặc nhắm cùng bạn bè.", art:"jar", imgs:IMG_MR},
+  {id:"cr", cat:"ca", name:"Cá đét rim", unit:"hủ", price:55000, old:60000, desc:"Cá đét rim mặn ngọt, đậm đà. Ăn với cơm nóng rất hao cơm.", art:"jar", imgs:IMG_CR},
+  {id:"mk2", cat:"muc", name:"Mực khô loại A2", unit:"bịch", price:null, soon:"Có hàng tháng 1", desc:"Con to nhất, thịt dày, ngọt tự nhiên. Nướng xé nhỏ chấm tương ớt.", art:"squid", imgs:IMG_A2, note:"25–30 con/kg · 0,5kg/bịch"},
+  {id:"mk3", cat:"muc", name:"Mực khô loại A3", unit:"bịch", price:null, soon:"Có hàng tháng 1", desc:"Cỡ vừa, thịt chắc, giá dễ chịu cho bữa nhậu và biếu người thân.", art:"squid", imgs:IMG_A3, note:"40–45 con/kg · 0,5kg/bịch"},
+  {id:"mk4", cat:"muc", name:"Mực khô loại A4", unit:"bịch", price:null, soon:"Có hàng tháng 1", desc:"Con nhỏ gọn, vị đậm, hợp ăn vặt và nấu món.", art:"squid", imgs:IMG_A4, note:"60–70 con/kg · 0,5kg/bịch"},
+  {id:"ck", cat:"ca", name:"Cá khô", unit:"bịch", price:null, soon:"Có hàng tháng 1", desc:"Cá khô đậm vị biển. Nướng hoặc chiên giòn ăn với cơm.", art:"fish", imgs:IMG_CK}
 ];
 // =====================
 
@@ -224,21 +235,28 @@ jar:'<svg viewBox="0 0 150 130"><rect x="40" y="14" width="70" height="16" rx="4
 squid:'<svg viewBox="0 0 150 130"><path d="M75 12 Q112 40 100 84 L50 84 Q38 40 75 12Z" fill="#e8b46a" stroke="#7a6652" stroke-width="2"/><path d="M52 84 Q50 112 58 120 M64 84 L64 122 M75 84 L75 124 M86 84 L86 122 M98 84 Q100 112 92 120" stroke="#7a6652" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="64" cy="48" r="3" fill="#7a6652"/><circle cx="86" cy="48" r="3" fill="#7a6652"/></svg>',
 fish:'<svg viewBox="0 0 150 130"><path d="M22 65 Q60 20 104 52 L132 34 L126 65 L132 96 L104 78 Q60 110 22 65Z" fill="#e8b46a" stroke="#7a6652" stroke-width="2"/><path d="M62 40 Q74 65 62 90 M80 36 Q92 65 80 94" stroke="#b9722c" stroke-width="2" fill="none" opacity=".6"/><circle cx="42" cy="60" r="4" fill="#7a6652"/></svg>'
 };
-var cart = {};
+var cart = {}, cat = "all";
 var fmt = function(n){return n.toLocaleString("vi-VN")+"đ"};
 
 function render(){
   var l = document.getElementById("list");
-  l.innerHTML = PRODUCTS.map(function(p){
-    var pr = p.price ? '<div class="price">'+fmt(p.price)+' <small>/ '+p.unit+'</small></div>' : '<div class="price"><small>Liên hệ báo giá / '+p.unit+'</small></div>';
-    return '<div class="card">'+(p.imgs?'<button class="pic photo" data-gal="'+p.id+'" aria-label="Xem thêm ảnh"><img src="'+p.imgs[0]+'" alt="'+p.name+'"><span class="cnt">Bấm xem chi tiết'+(p.note?' · '+p.note:'')+'</span></button>':'<div class="pic">'+art[p.art]+'</div>')+'<div class="body"><h3>'+p.name+'</h3><p>'+p.desc+'</p>'+pr+
-      '<div class="qty"><button data-id="'+p.id+'" data-d="-1" aria-label="Giảm">−</button><b id="q-'+p.id+'">'+(cart[p.id]||0)+'</b><button data-id="'+p.id+'" data-d="1" aria-label="Thêm">+</button></div></div></div>';
+  l.innerHTML = PRODUCTS.filter(function(p){ return cat === "all" || p.cat === cat; }).map(function(p){
+    var pr = p.soon ? '<div class="price"><small>Gần Tết nhà mình mới có hàng</small></div>' : p.price ? '<div class="price">'+(p.old?'<s>'+fmt(p.old)+'</s>':'')+fmt(p.price)+' <small>/ '+p.unit+'</small></div>' : '<div class="price"><small>Liên hệ báo giá / '+p.unit+'</small></div>';
+    var qty = p.soon ? '<div class="soon">'+p.soon+'</div>' : '<div class="qty"><button data-id="'+p.id+'" data-d="-1" aria-label="Giảm">−</button><b id="q-'+p.id+'">'+(cart[p.id]||0)+'</b><button data-id="'+p.id+'" data-d="1" aria-label="Thêm">+</button></div>';
+    return '<div class="card">'+(p.imgs?'<button class="pic photo" data-gal="'+p.id+'" aria-label="Xem thêm ảnh"><img src="'+p.imgs[0]+'" alt="'+p.name+'"><span class="cnt">Bấm xem chi tiết'+(p.note?' · '+p.note:'')+'</span></button>':'<div class="pic">'+art[p.art]+'</div>')+'<div class="body"><h3>'+p.name+'</h3><p>'+p.desc+'</p>'+pr+qty+'</div></div>';
   }).join("");
 }
 document.getElementById("list").addEventListener("click",function(e){
   var b = e.target.closest("button"); if(!b) return; if(b.dataset.gal){ openGal(b.dataset.gal); return; }
   var id = b.dataset.id, v = Math.max(0,(cart[id]||0)+Number(b.dataset.d));
   cart[id] = v; document.getElementById("q-"+id).textContent = v; summary();
+});
+
+document.getElementById("tabs").addEventListener("click",function(e){
+  var b = e.target.closest("button"); if(!b || b.dataset.cat === cat) return;
+  cat = b.dataset.cat;
+  this.querySelectorAll("button").forEach(function(x){ var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-selected", on); });
+  render();
 });
 
 function subtotal(){ var t = 0; PRODUCTS.forEach(function(p){ t += (p.price||0)*(cart[p.id]||0); }); return t; }
@@ -356,14 +374,24 @@ document.addEventListener("keydown",function(e){ if(document.getElementById("lb"
 function go(id){ document.getElementById(id).scrollIntoView({behavior:"smooth"}); }
 document.getElementById("cta").addEventListener("click",function(){ go("menu"); });
 // ===== Trợ lý hỏi đáp (trả lời theo từ khóa) =====
-var CHIPS = ['Giá các món?','Phí ship thế nào?','Cách đặt hàng?','Mực khô khác nhau sao?','Thanh toán thế nào?','Bảo quản ra sao?','Đặt trước mấy ngày?','Nhận đơn mấy giờ?'];
+var CHIPS = ['Giá các món?','Phí ship thế nào?','Cách đặt hàng?','Khi nào có mực khô?','Thanh toán thế nào?','Bảo quản ra sao?','Đặt trước mấy ngày?','Nhận đơn mấy giờ?'];
 var FBL = '<a href="https://web.facebook.com/profile.php?id=61595248601578&sk=about" target="_blank" rel="noopener">Hải Vị Xứ Quảng</a>';
 var MAIL = '<a href="mailto:haivixuquang@gmail.com">haivixuquang@gmail.com</a>';
-function menuAns(){ return 'Nhà mình đang có:<br>' + PRODUCTS.map(function(p){ return '• ' + p.name + ': ' + (p.price ? fmt(p.price) + '/' + p.unit : 'báo giá khi đặt'); }).join('<br>') + '<br>Bạn chọn món ở phần “Chọn món” phía trên nhé.'; }
+// Bot giới thiệu trước các món có giá (mực rim, cá đét rim); món báo giá và món chưa có hàng thì nhắc một câu.
+// Chatbot chỉ nói giá hiện tại, không nhắc giảm giá (giá gạch ngang chỉ hiện trên thẻ món).
+function priceTxt(p){ return fmt(p.price) + ' một ' + p.unit; }
+function menuAns(){
+  var ready = PRODUCTS.filter(function(p){ return p.price && !p.soon; });
+  return 'Dạ hiện nhà mình đang có:<br>' + ready.map(function(p){ return '• ' + p.name + ': ' + priceTxt(p); }).join('<br>') +
+    '<br>Tụi mình lấy mẻ mới theo đơn nên vị vẫn đậm đà, thơm ngon á. Mực khô với cá khô thì gần Tết nhà mình mới có hàng nhenn.<br>Bạn chọn món ở phần “Chọn món” phía trên nha.';
+}
 var FAQ = [
- {k:['xin chao',' chao ','hello',' hi ','alo'], a:'Chào bạn! Bạn muốn hỏi về món, giá, phí ship hay cách đặt hàng?'},
+ {k:['xin chao',' chao ','hello',' hi ','alo'], a:'Chào bạn nhenn 🧡 Nhà mình đang có mực rim với cá đét rim, bạn muốn thử món nào á?'},
  {k:['gia ','bao nhieu','menu',' mon ','ban gi','san pham','co gi'], a:menuAns},
- {k:['muc kho','a2','a3','a4','size','khac nhau','loai nao','co nao'], a:'Mực khô chia theo cỡ, số con trong 1 kg càng ít thì con càng to: A2 khoảng 25–30 con/kg, A3 khoảng 40–45 con/kg, A4 khoảng 60–70 con/kg. Con càng to thì giá càng cao. Mỗi bịch nặng 0,5 kg.'},
+ {k:['muc kho','a2','a3','a4','size','khac nhau','loai nao','co nao'], a:'Dạ mực khô thì tầm tháng 1, gần Tết nhà mình mới có hàng á, có hàng là tụi mình báo giá liền nhenn.<br>Mực khô chia theo cỡ, số con trong 1 kg càng ít thì con càng to:<br>• A2: khoảng 25–30 con/kg<br>• A3: khoảng 40–45 con/kg<br>• A4: khoảng 60–70 con/kg<br>Mỗi bịch nặng <b>0,5 kg</b>.'},
+ {w:2, k:['ca kho'], a:'Dạ cá khô thì tầm tháng 1, gần Tết nhà mình mới có hàng á, có hàng là tụi mình báo giá liền nhenn. Cá khô nướng hoặc chiên giòn ăn với cơm là hết sẩy luôn.'},
+ {w:2, k:['muc rim','ca det','ca rim'], a:function(){ var g = function(id){ var p = PRODUCTS.filter(function(x){ return x.id === id; })[0]; return priceTxt(p); };
+   return 'Dạ mực rim nhà mình ' + g('mr') + ', cá đét rim ' + g('cr') + ' á. Tụi mình lấy mẻ mới theo đơn nên vị vẫn đậm đà, thơm ngon nhenn.'; }},
  {k:['ship','giao hang','van chuyen','phi giao','mien phi','freeship','phi van'], a:'Nhà mình miễn phí ship cho mọi đơn giao trong Đà Nẵng. Nếu bạn ở ngoài Đà Nẵng, hãy nhắn fanpage ' + FBL + ' hoặc gửi email ' + MAIL + ' để mình tư vấn cách giao nhé.'},
  {w:2, k:['tinh khac',' tinh ','di xa','ha noi','sai gon','hcm','gui di'], a:'Hiện nhà mình giao miễn phí trong Đà Nẵng. Nếu bạn ở tỉnh khác, hãy nhắn fanpage ' + FBL + ' hoặc gửi email ' + MAIL + ' để mình tư vấn cách giao nhé.'},
  {k:['dat hang','cach dat','dat nhu the nao','order','muon mua','mua nhu the nao','dat mon'], a:'Cách đặt rất đơn giản:<br>1. Chọn món bằng nút + ở phần “Chọn món”.<br>2. Điền họ tên, số điện thoại, địa chỉ ở phần “Đơn của bạn”.<br>3. Bấm “Đặt hàng” một lần. Màn hình sẽ hiện mã đơn, bạn chụp màn hình gửi fanpage qua Messenger. Hải Vị sẽ gọi xác nhận đơn.'},
@@ -372,13 +400,13 @@ var FAQ = [
  {k:['lien he','email','mail','so dien thoai','sdt','zalo','facebook','fanpage','hotline'], a:'Bạn liên hệ cửa hàng qua fanpage ' + FBL + ' hoặc email ' + MAIL},
  {k:['may gio','gio lam','mo cua','dong cua','nhan don','gio nhan','7h','22h30'], a:'Nhà mình nhận đơn từ 7h đến 22h30.'},
  {k:['bao quan','han dung','bao lau','tu lanh','date','de duoc','het han'], a:'Bạn để lạnh trong tủ lạnh, khi nào ăn thì lấy ra nhé. Hạn dùng cụ thể cửa hàng sẽ báo khi xác nhận đơn.'},
- {k:['dat truoc','may ngay','khi nao nhan','khi nao giao','nhan hang','bao lau nhan','thoi gian giao','giao khi nao'], a:'Nhà mình lấy hàng theo đơn đặt trước để hàng luôn mới, nên bạn đặt sớm giúp mình nhé. Ngày giao cụ thể cửa hàng sẽ báo khi xác nhận đơn.'}
+ {k:['dat truoc','may ngay','khi nao nhan','khi nao giao','nhan hang','bao lau nhan','thoi gian giao','giao khi nao'], a:'Dạ tụi mình lấy mẻ mới theo đơn nên vị vẫn đậm đà, thơm ngon á. Ngày giao cụ thể tụi mình báo khi gọi xác nhận đơn nhenn.'}
 ];
 function norm(s){ return ' ' + s.toLowerCase().replace(/đ/g,'d').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim() + ' '; }
 function reply(q){
   var t = norm(q), best = null, bs = 0;
   FAQ.forEach(function(f){ var s = 0; f.k.forEach(function(k){ if(t.indexOf(k) > -1) s += k.length; }); s *= (f.w || 1); if(s > bs){ bs = s; best = f; } });
-  if(!best) return 'Mình chưa có câu trả lời cho ý này. Bạn thử chọn câu gợi ý bên dưới, hoặc gửi email cho cửa hàng: ' + MAIL;
+  if(!best) return 'Dạ câu này để tụi mình trả lời bạn cho chắc nhenn. Bạn nhắn fanpage ' + FBL + ' giúp tụi mình, người nhà nhắn lại liền á.';
   return typeof best.a === 'function' ? best.a() : best.a;
 }
 function addMsg(cls, content, asText){
@@ -393,7 +421,7 @@ document.querySelectorAll('.av').forEach(function(a){ a.innerHTML = '<img src="'
 document.getElementById('cc').innerHTML = CHIPS.map(function(c){ return '<button>' + c + '</button>'; }).join('');
 function openChat(){
   cp.hidden = false; cb.hidden = true;
-  if(!greeted){ greeted = true; addMsg('b', 'Chào bạn, mình là trợ lý của Hải Vị Xứ Quảng 🦑 Bạn cần hỏi giá, phí ship hay cách đặt hàng? Mình trả lời liền.'); }
+  if(!greeted){ greeted = true; addMsg('b', 'Chào bạn nhenn 🧡 Nhà mình đang có mực rim với cá đét rim, bạn muốn thử món nào á?'); }
 }
 function closeChat(){ cp.hidden = true; cb.hidden = false; }
 cb.addEventListener('click', openChat);
